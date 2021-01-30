@@ -51,6 +51,7 @@
             this.targetFileList.Name = "targetFileList";
             this.targetFileList.Size = new System.Drawing.Size(614, 405);
             this.targetFileList.TabIndex = 0;
+            this.targetFileList.SelectedIndexChanged += new System.EventHandler(this.targetFileList_SelectedIndexChanged);
             // 
             // label1
             // 
