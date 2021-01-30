@@ -38,8 +38,8 @@ namespace MangaZipRecomposer
 
         private void targetFileList_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
         {
-            string[] pathList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
-            foreach(string path in pathList) {
+            String[] pathList = (String[])e.Data.GetData(DataFormats.FileDrop, false);
+            foreach(String path in pathList) {
                 String ext = Path.GetExtension(path);
                 if (!ext.ToUpper().Equals(EXTENSION_ZIP)) {
                     continue;
@@ -48,6 +48,8 @@ namespace MangaZipRecomposer
                 if (!fileName.StartsWith(SRC_FILE_PREFIX)) {
                     continue;
                 }
+                if (targetFileList.Items.Contains(path)) continue;
+
                 targetFileList.Items.Add(path);
             }
         }
