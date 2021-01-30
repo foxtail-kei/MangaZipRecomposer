@@ -35,6 +35,7 @@
             this.startButton = new System.Windows.Forms.Button();
             this.deleteSrcFileCheck = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // targetFileList
@@ -49,7 +50,7 @@
             this.targetFileList.ItemHeight = 15;
             this.targetFileList.Location = new System.Drawing.Point(14, 27);
             this.targetFileList.Name = "targetFileList";
-            this.targetFileList.Size = new System.Drawing.Size(614, 405);
+            this.targetFileList.Size = new System.Drawing.Size(614, 380);
             this.targetFileList.TabIndex = 0;
             this.targetFileList.SelectedIndexChanged += new System.EventHandler(this.targetFileList_SelectedIndexChanged);
             // 
@@ -91,7 +92,7 @@
             // 
             this.startButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.startButton.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.startButton.Location = new System.Drawing.Point(650, 383);
+            this.startButton.Location = new System.Drawing.Point(650, 358);
             this.startButton.Name = "startButton";
             this.startButton.Size = new System.Drawing.Size(96, 49);
             this.startButton.TabIndex = 2;
@@ -122,11 +123,22 @@
             this.label2.TabIndex = 4;
             this.label2.Text = "オプション";
             // 
+            // progressBar
+            // 
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar.Location = new System.Drawing.Point(15, 413);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(731, 21);
+            this.progressBar.Step = 5;
+            this.progressBar.TabIndex = 5;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 446);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.deleteSrcFileCheck);
             this.Controls.Add(this.startButton);
@@ -151,6 +163,7 @@
         private System.Windows.Forms.Button startButton;
         private System.Windows.Forms.CheckBox deleteSrcFileCheck;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ProgressBar progressBar;
     }
 }
 

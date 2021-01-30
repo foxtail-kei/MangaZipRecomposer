@@ -37,9 +37,13 @@ namespace MangaZipRecomposer
         private void targetFileList_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
                 e.Effect = DragDropEffects.All;
+            }
             else
+            {
                 e.Effect = DragDropEffects.None;
+            }
         }
 
         private void targetFileList_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
@@ -47,11 +51,13 @@ namespace MangaZipRecomposer
             String[] pathList = (String[])e.Data.GetData(DataFormats.FileDrop, false);
             foreach(String path in pathList) {
                 String ext = Path.GetExtension(path);
-                if (!ext.ToUpper().Equals(EXTENSION_ZIP)) {
+                if (!ext.ToUpper().Equals(EXTENSION_ZIP)) 
+                {
                     continue;
                 }
                 String fileName = Path.GetFileName(path);
-                if (!fileName.StartsWith(SRC_FILE_PREFIX)) {
+                if (!fileName.StartsWith(SRC_FILE_PREFIX)) 
+                {
                     continue;
                 }
                 if (targetFileList.Items.Contains(path)) continue;
@@ -71,41 +77,117 @@ namespace MangaZipRecomposer
             targetFileList.Items.Clear();
         }
 
-        private void startButton_Click(object sender, EventArgs e)
+        private async void startButton_Click(object sender, EventArgs e)
         {
-            String tempPath = Path.GetTempPath() + TEMP_FOLDER;
-            
-            foreach (String path in targetFileList.Items) { 
-                // ファイルの存在チェック
-                if (!File.Exists(path)) {
-                    continue;
-                }
+            // コントロールをロック
+            targetFileList.Enabled = false;
+            deleteButton.Enabled = false;
+            deleteAllButton.Enabled = false;
 
-                try
-                {
-                    // ファイルの解凍
-                    ZipFile.ExtractToDirectory(path, tempPath + UNZIP_FOLDER);
-                    String unzipPath = Directory.GetDirectories(tempPath + UNZIP_FOLDER)[0];
+            // プログレスバーを初期化
+            progressBar.Minimum = 0;
+            progressBar.Maximum = targetFileList.Items.Count * 15;
+            progressBar.Value = 0;
 
-                    // 表紙を移動
-                    File.Move(unzipPath + COVER_SRC_FILE, unzipPath + IMAGES_FOLDER + COVER_DEST_FILE);
-
-                    // ファイルの圧縮
-                    String destFilePath = Path.GetDirectoryName(path) + "\\" + Path.GetFileName(path).Substring(SRC_FILE_PREFIX.Length);
-                    ZipFile.CreateFromDirectory(unzipPath + IMAGES_FOLDER, destFilePath);
-
-                    // 元ファイル削除
-                    if (deleteSrcFileCheck.Checked) {
-                        File.Delete(path);
-                    } 
-                } catch {
-                } finally {
-                    if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
-                }
-            }
+            // 別スレッドで処理を開始
+            await Task.Run(() =>
+            {
+                recomposeThread();
+            });
 
             // リストをクリア
             targetFileList.Items.Clear();
+
+            // コントロールのロックを解除
+            targetFileList.Enabled = true;
+            deleteButton.Enabled = true;
+            deleteAllButton.Enabled = true;
+        }
+
+        private void recomposeThread()
+        {
+            // 作業フォルダの初期化
+            String tempPath = Path.GetTempPath() + TEMP_FOLDER;
+            if (Directory.Exists(tempPath))
+            {
+                Directory.Delete(tempPath, true);
+            }
+
+            try
+            {
+                // リストのアイテムを並列処理
+                Parallel.ForEach(targetFileList.Items.Cast<String>(), path =>
+                {
+                    try
+                    {
+                        recompose(path);
+                    }
+                    finally
+                    {
+                        reportProgress();
+                    }
+                });
+            }
+            finally
+            {
+                if (Directory.Exists(tempPath))
+                {
+                    Directory.Delete(tempPath, true);
+                }
+            }
+        }
+
+        private void recompose(String path)
+        {
+            // ファイルの存在チェック
+            if (!File.Exists(path))
+            {
+                reportProgress();
+                reportProgress();
+                return;
+            }
+
+            // 作業フォルダのパスを作成
+            String tempPath = Path.GetTempPath() + TEMP_FOLDER + "\\" + Path.GetFileNameWithoutExtension(path);
+
+            try
+            {
+                // ファイルの解凍
+                ZipFile.ExtractToDirectory(path, tempPath);
+                String unzipPath = Directory.GetDirectories(tempPath)[0];
+
+                reportProgress();
+
+                // 表紙を移動
+                File.Move(unzipPath + COVER_SRC_FILE, unzipPath + IMAGES_FOLDER + COVER_DEST_FILE);
+
+                // ファイルの圧縮
+                String destFilePath = Path.GetDirectoryName(path) + "\\" + Path.GetFileName(path).Substring(SRC_FILE_PREFIX.Length);
+                ZipFile.CreateFromDirectory(unzipPath + IMAGES_FOLDER, destFilePath);
+
+                reportProgress();
+
+                // 元ファイル削除
+                if (deleteSrcFileCheck.Checked)
+                {
+                    File.Delete(path);
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(tempPath))
+                {
+                    Directory.Delete(tempPath, true);
+                }
+            }
+        }
+
+        private void reportProgress()
+        {
+            progressBar.Invoke(new Action(() =>
+            {
+                progressBar.PerformStep();
+            }));
         }
     }
 }
