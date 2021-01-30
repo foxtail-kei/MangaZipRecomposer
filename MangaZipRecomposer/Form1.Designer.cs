@@ -97,6 +97,7 @@
             this.startButton.TabIndex = 2;
             this.startButton.Text = "処理開始";
             this.startButton.UseVisualStyleBackColor = true;
+            this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
             // deleteSrcFileCheck
             // 

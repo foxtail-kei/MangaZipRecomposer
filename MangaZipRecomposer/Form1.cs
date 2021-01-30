@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.IO.Compression;
 
 namespace MangaZipRecomposer
 {
@@ -15,6 +16,9 @@ namespace MangaZipRecomposer
     {
         public static string EXTENSION_ZIP = ".ZIP";
         public static string SRC_FILE_PREFIX = "cbr_";
+        public static string TEMP_FOLDER = "MangaZipRecomposer";
+        public static string UNZIP_FOLDER = "\\unzip";
+        public static string PICKUP_FOLDER = "\\pickup";
 
         public Form1()
         {
@@ -63,6 +67,41 @@ namespace MangaZipRecomposer
         private void deleteAllButton_Click(object sender, EventArgs e)
         {
             targetFileList.Items.Clear();
+        }
+
+        private void startButton_Click(object sender, EventArgs e)
+        {
+            String tempPath = Path.GetTempPath() + TEMP_FOLDER;
+            
+            foreach (String path in targetFileList.Items) { 
+                // ファイルの存在チェック
+                if (!File.Exists(path)) {
+                    continue;
+                }
+
+                try
+                {
+                    // ファイルの解凍
+                    ZipFile.ExtractToDirectory(path, tempPath + UNZIP_FOLDER);
+                    String unzipPath = Directory.GetDirectories(tempPath + UNZIP_FOLDER)[0];
+
+                    // 作業フォルダ作成
+                    String pickupPath = tempPath + PICKUP_FOLDER;
+                    Directory.CreateDirectory(pickupPath);
+
+                    // 対象ファイルを移動
+                    // - 表紙を移動
+
+
+                    // - その他のページを移動
+
+                    // ファイルの圧縮
+
+                } catch {
+                } finally {
+                    if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
+                }
+            }
         }
     }
 }
