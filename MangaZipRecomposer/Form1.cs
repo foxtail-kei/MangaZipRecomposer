@@ -18,7 +18,9 @@ namespace MangaZipRecomposer
         public static string SRC_FILE_PREFIX = "cbr_";
         public static string TEMP_FOLDER = "MangaZipRecomposer";
         public static string UNZIP_FOLDER = "\\unzip";
-        public static string PICKUP_FOLDER = "\\pickup";
+        public static string IMAGES_FOLDER = "\\images";
+        public static string COVER_SRC_FILE = "\\cover.jpeg";
+        public static string COVER_DEST_FILE = "\\00001.jpeg";
 
         public Form1()
         {
@@ -85,27 +87,25 @@ namespace MangaZipRecomposer
                     ZipFile.ExtractToDirectory(path, tempPath + UNZIP_FOLDER);
                     String unzipPath = Directory.GetDirectories(tempPath + UNZIP_FOLDER)[0];
 
-                    // 作業フォルダ作成
-                    String pickupPath = tempPath + PICKUP_FOLDER;
-                    Directory.CreateDirectory(pickupPath);
-
-                    // 対象ファイルを移動
-                    // - 表紙を移動
-
-
-                    // - その他のページを移動
+                    // 表紙を移動
+                    File.Move(unzipPath + COVER_SRC_FILE, unzipPath + IMAGES_FOLDER + COVER_DEST_FILE);
 
                     // ファイルの圧縮
+                    String destFilePath = Path.GetDirectoryName(path) + "\\" + Path.GetFileName(path).Substring(SRC_FILE_PREFIX.Length);
+                    ZipFile.CreateFromDirectory(unzipPath + IMAGES_FOLDER, destFilePath);
 
                     // 元ファイル削除
-
-                    // リストからパスを削除
-
+                    if (deleteSrcFileCheck.Checked) {
+                        File.Delete(path);
+                    } 
                 } catch {
                 } finally {
                     if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
                 }
             }
+
+            // リストをクリア
+            targetFileList.Items.Clear();
         }
     }
 }
