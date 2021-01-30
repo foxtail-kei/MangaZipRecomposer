@@ -51,5 +51,16 @@ namespace MangaZipRecomposer
                 targetFileList.Items.Add(path);
             }
         }
+
+        private void deleteButton_Click(object sender, EventArgs e)
+        {
+            int index = targetFileList.SelectedIndex;
+            if (index > 0) targetFileList.Items.RemoveAt(index);
+        }
+
+        private void deleteAllButton_Click(object sender, EventArgs e)
+        {
+            targetFileList.Items.Clear();
+        }
     }
 }

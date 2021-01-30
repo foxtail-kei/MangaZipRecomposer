@@ -73,6 +73,7 @@
             this.deleteButton.TabIndex = 2;
             this.deleteButton.Text = "削除";
             this.deleteButton.UseVisualStyleBackColor = true;
+            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
             // 
             // deleteAllButton
             // 
@@ -84,6 +85,7 @@
             this.deleteAllButton.TabIndex = 2;
             this.deleteAllButton.Text = "全て削除";
             this.deleteAllButton.UseVisualStyleBackColor = true;
+            this.deleteAllButton.Click += new System.EventHandler(this.deleteAllButton_Click);
             // 
             // startButton
             // 
