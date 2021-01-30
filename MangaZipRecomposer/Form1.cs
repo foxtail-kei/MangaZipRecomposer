@@ -97,6 +97,10 @@ namespace MangaZipRecomposer
 
                     // ファイルの圧縮
 
+                    // 元ファイル削除
+
+                    // リストからパスを削除
+
                 } catch {
                 } finally {
                     if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
