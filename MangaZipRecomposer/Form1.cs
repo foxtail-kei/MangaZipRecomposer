@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 namespace MangaZipRecomposer
 {
@@ -21,6 +22,17 @@ namespace MangaZipRecomposer
         public static string IMAGES_FOLDER = "\\images";
         public static string COVER_SRC_FILE = "\\cover.jpeg";
         public static string COVER_DEST_FILE = "\\00001.jpeg";
+
+        public static string START_BUTTON = "処理開始";
+        public static string STOP_BUTTON = "中止";
+
+        private SwitchMode startSwitchMode = SwitchMode.Start;
+
+        private enum SwitchMode
+        {
+            Start,
+            Stop
+        }
 
         public Form1()
         {
@@ -79,29 +91,62 @@ namespace MangaZipRecomposer
 
         private async void startButton_Click(object sender, EventArgs e)
         {
-            // コントロールをロック
-            targetFileList.Enabled = false;
-            deleteButton.Enabled = false;
-            deleteAllButton.Enabled = false;
-
-            // プログレスバーを初期化
-            progressBar.Minimum = 0;
-            progressBar.Maximum = targetFileList.Items.Count * 15;
-            progressBar.Value = 0;
-
-            // 別スレッドで処理を開始
-            await Task.Run(() =>
+            switch (startSwitchMode)
             {
-                recomposeThread();
-            });
+                case SwitchMode.Start:
+                    // 処理開始
+                    // コントロールをロック
+                    targetFileList.Enabled = false;
+                    deleteButton.Enabled = false;
+                    deleteAllButton.Enabled = false;
 
-            // リストをクリア
-            targetFileList.Items.Clear();
+                    // スタートスイッチをキャンセルに変更
+                    startButton.Text = STOP_BUTTON;
+                    startSwitchMode = SwitchMode.Stop;
 
-            // コントロールのロックを解除
-            targetFileList.Enabled = true;
-            deleteButton.Enabled = true;
-            deleteAllButton.Enabled = true;
+                    // プログレスバーを初期化
+                    progressBar.Minimum = 0;
+                    progressBar.Maximum = targetFileList.Items.Count * 15;
+                    progressBar.Value = 0;
+                    SetState(progressBar, ProgressBarStateEnum.Normal);
+                    progressBar.Update();
+
+                    // 別スレッドで処理を開始
+                    await Task.Run(() =>
+                    {
+                        recomposeThread();
+                    });
+
+                    // リストをクリア
+                    targetFileList.Items.Clear();
+
+                    // スタートスイッチを元に戻す
+                    startButton.Text = START_BUTTON;
+                    startSwitchMode = SwitchMode.Start;
+
+                    // コントロールのロックを解除
+                    targetFileList.Enabled = true;
+                    deleteButton.Enabled = true;
+                    deleteAllButton.Enabled = true;
+
+                    break;
+                case SwitchMode.Stop:
+                    // 中止
+
+                    // プログレスバーを中止状態にする
+                    SetState(progressBar, ProgressBarStateEnum.Error);
+
+                    // スタートスイッチを元に戻す
+                    startButton.Text = START_BUTTON;
+                    startSwitchMode = SwitchMode.Start;
+
+                    // コントロールのロックを解除
+                    targetFileList.Enabled = true;
+                    deleteButton.Enabled = true;
+                    deleteAllButton.Enabled = true;
+
+                    break;
+            }
         }
 
         private void recomposeThread()
@@ -142,8 +187,7 @@ namespace MangaZipRecomposer
             // ファイルの存在チェック
             if (!File.Exists(path))
             {
-                reportProgress();
-                reportProgress();
+                reportProgress(2);
                 return;
             }
 
@@ -182,12 +226,34 @@ namespace MangaZipRecomposer
             }
         }
 
-        private void reportProgress()
+        private void reportProgress(int times = 1)
         {
             progressBar.Invoke(new Action(() =>
             {
-                progressBar.PerformStep();
+                for (int i = 0; i < times; i++)
+                {
+                    progressBar.PerformStep();
+                }
             }));
+        }
+
+        const int WM_USER = 0x400;
+        const int PBM_SETSTATE = WM_USER + 16;
+        const int PBM_GETSTATE = WM_USER + 17;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        public enum ProgressBarStateEnum : int
+        {
+            Normal = 1,
+            Error = 2,
+            Paused = 3,
+        }
+
+        private void SetState(ProgressBar pBar, ProgressBarStateEnum state)
+        {
+            SendMessage(pBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
     }
 }
