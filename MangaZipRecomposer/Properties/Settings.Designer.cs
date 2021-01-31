@@ -34,5 +34,17 @@ namespace MangaZipRecomposer.Properties {
                 this["Bounds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DeleteSrcFile {
+            get {
+                return ((bool)(this["DeleteSrcFile"]));
+            }
+            set {
+                this["DeleteSrcFile"] = value;
+            }
+        }
     }
 }

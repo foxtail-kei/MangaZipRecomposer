@@ -287,6 +287,9 @@ namespace MangaZipRecomposer
         {
             // ウィンドウの位置・サイズを復元
             Bounds = Properties.Settings.Default.Bounds;
+
+            // オプションの設定値を復元
+            deleteSrcFileCheck.Checked = Properties.Settings.Default.DeleteSrcFile;
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -300,6 +303,9 @@ namespace MangaZipRecomposer
             {
                 Properties.Settings.Default.Bounds = RestoreBounds;
             }
+
+            // オプションの設定値を保存
+            Properties.Settings.Default.DeleteSrcFile = deleteSrcFileCheck.Checked;
 
             Properties.Settings.Default.Save();
         }
