@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using System.IO;
 using System.IO.Compression;
@@ -27,6 +28,7 @@ namespace MangaZipRecomposer
         public static string STOP_BUTTON = "中止";
 
         private SwitchMode startSwitchMode = SwitchMode.Start;
+        private CancellationTokenSource cancellationTokenSource;
 
         private enum SwitchMode
         {
@@ -95,14 +97,12 @@ namespace MangaZipRecomposer
             {
                 case SwitchMode.Start:
                     // 処理開始
-                    // コントロールをロック
-                    targetFileList.Enabled = false;
-                    deleteButton.Enabled = false;
-                    deleteAllButton.Enabled = false;
-
                     // スタートスイッチをキャンセルに変更
                     startButton.Text = STOP_BUTTON;
                     startSwitchMode = SwitchMode.Stop;
+
+                    // コントロールをロック
+                    lockControll();
 
                     // プログレスバーを初期化
                     progressBar.Minimum = 0;
@@ -111,45 +111,43 @@ namespace MangaZipRecomposer
                     SetState(progressBar, ProgressBarStateEnum.Normal);
                     progressBar.Update();
 
+                    // キャンセルトークンの準備
+                    cancellationTokenSource = new CancellationTokenSource();
+                    CancellationToken cToken = cancellationTokenSource.Token;
+
                     // 別スレッドで処理を開始
-                    await Task.Run(() =>
-                    {
-                        recomposeThread();
-                    });
+                    bool result = await Task.Run(() => recomposeThread(cToken));
 
                     // リストをクリア
-                    targetFileList.Items.Clear();
+                    if (result)
+                    {
+                        targetFileList.Items.Clear();
+                    }
 
-                    // スタートスイッチを元に戻す
+                    // スタートボタンを元に戻す
                     startButton.Text = START_BUTTON;
                     startSwitchMode = SwitchMode.Start;
+                    startButton.Enabled = true;
 
                     // コントロールのロックを解除
-                    targetFileList.Enabled = true;
-                    deleteButton.Enabled = true;
-                    deleteAllButton.Enabled = true;
+                    unlockControll();
 
                     break;
                 case SwitchMode.Stop:
+                    // スタートボタンをロックする
+                    startButton.Enabled = false;
+
                     // 中止
+                    cancellationTokenSource.Cancel();
 
                     // プログレスバーを中止状態にする
                     SetState(progressBar, ProgressBarStateEnum.Error);
-
-                    // スタートスイッチを元に戻す
-                    startButton.Text = START_BUTTON;
-                    startSwitchMode = SwitchMode.Start;
-
-                    // コントロールのロックを解除
-                    targetFileList.Enabled = true;
-                    deleteButton.Enabled = true;
-                    deleteAllButton.Enabled = true;
 
                     break;
             }
         }
 
-        private void recomposeThread()
+        private bool recomposeThread(CancellationToken cToken)
         {
             // 作業フォルダの初期化
             String tempPath = Path.GetTempPath() + TEMP_FOLDER;
@@ -158,20 +156,23 @@ namespace MangaZipRecomposer
                 Directory.Delete(tempPath, true);
             }
 
+            // 処理中断の準備
+            ParallelOptions parallelOptions = new ParallelOptions();
+            parallelOptions.CancellationToken = cToken;
+
             try
             {
                 // リストのアイテムを並列処理
-                Parallel.ForEach(targetFileList.Items.Cast<String>(), path =>
+                Parallel.ForEach(targetFileList.Items.Cast<String>(), parallelOptions, path =>
                 {
-                    try
-                    {
-                        recompose(path);
-                    }
-                    finally
-                    {
-                        reportProgress();
-                    }
+                    parallelOptions.CancellationToken.ThrowIfCancellationRequested();
+                    recompose(path, parallelOptions);
+                    reportProgress();
                 });
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             finally
             {
@@ -180,9 +181,11 @@ namespace MangaZipRecomposer
                     Directory.Delete(tempPath, true);
                 }
             }
+
+            return true;
         }
 
-        private void recompose(String path)
+        private void recompose(String path, ParallelOptions parallelOptions)
         {
             // ファイルの存在チェック
             if (!File.Exists(path))
@@ -201,6 +204,7 @@ namespace MangaZipRecomposer
                 String unzipPath = Directory.GetDirectories(tempPath)[0];
 
                 reportProgress();
+                parallelOptions.CancellationToken.ThrowIfCancellationRequested();
 
                 // 表紙を移動
                 File.Move(unzipPath + COVER_SRC_FILE, unzipPath + IMAGES_FOLDER + COVER_DEST_FILE);
@@ -210,12 +214,17 @@ namespace MangaZipRecomposer
                 ZipFile.CreateFromDirectory(unzipPath + IMAGES_FOLDER, destFilePath);
 
                 reportProgress();
+                parallelOptions.CancellationToken.ThrowIfCancellationRequested();
 
                 // 元ファイル削除
                 if (deleteSrcFileCheck.Checked)
                 {
                     File.Delete(path);
                 }
+            }
+            catch
+            {
+                throw;
             }
             finally
             {
@@ -235,6 +244,24 @@ namespace MangaZipRecomposer
                     progressBar.PerformStep();
                 }
             }));
+        }
+
+        private void lockControll()
+        {
+            // コントロールをロック
+            targetFileList.Enabled = false;
+            deleteButton.Enabled = false;
+            deleteAllButton.Enabled = false;
+            deleteSrcFileCheck.Enabled = false;
+        }
+
+        private void unlockControll()
+        {
+            // コントロールのロックを解除
+            targetFileList.Enabled = true;
+            deleteButton.Enabled = true;
+            deleteAllButton.Enabled = true;
+            deleteSrcFileCheck.Enabled = true;
         }
 
         const int WM_USER = 0x400;
