@@ -14,9 +14,25 @@ namespace MangaZipRecomposer
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            // ミューテックス生成
+            using (System.Threading.Mutex mutex = new System.Threading.Mutex(false, Application.ProductName))
+            {
+                // 二重起動を禁止する
+                if (mutex.WaitOne(0, false))
+                {
+                    try
+                    {
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
+                        Application.Run(new Form1());
+                    }
+                    finally
+                    {
+                        mutex.ReleaseMutex();
+                        mutex.Close();
+                    }
+                }
+            }
         }
     }
 }
