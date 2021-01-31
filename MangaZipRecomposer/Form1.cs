@@ -282,5 +282,26 @@ namespace MangaZipRecomposer
         {
             SendMessage(pBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // ウィンドウの位置・サイズを復元
+            Bounds = Properties.Settings.Default.Bounds;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // ウィンドウの位置・サイズを保存
+            if (WindowState == FormWindowState.Normal)
+            {
+                Properties.Settings.Default.Bounds = Bounds;
+            }
+            else
+            {
+                Properties.Settings.Default.Bounds = RestoreBounds;
+            }
+
+            Properties.Settings.Default.Save();
+        }
     }
 }
