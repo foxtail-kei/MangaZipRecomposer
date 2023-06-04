@@ -207,7 +207,10 @@ namespace MangaZipRecomposer
                 parallelOptions.CancellationToken.ThrowIfCancellationRequested();
 
                 // 表紙を移動
-                File.Move(unzipPath + COVER_SRC_FILE, unzipPath + IMAGES_FOLDER + COVER_DEST_FILE);
+                String coverFilePath = unzipPath + IMAGES_FOLDER + COVER_DEST_FILE;
+                if (!File.Exists(coverFilePath)) {
+                    File.Move(unzipPath + COVER_SRC_FILE, coverFilePath);
+                }
 
                 // ファイルの圧縮
                 String destFilePath = Path.GetDirectoryName(path) + "\\" + Path.GetFileName(path).Substring(SRC_FILE_PREFIX.Length);
