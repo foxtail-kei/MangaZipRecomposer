@@ -4,10 +4,10 @@
 
 【 ソフト名 】MangaZipRecomposer
 【 製 作 者 】Kei.S
-【 開発環境 】Microsoft Visual Studio 2019
-【 動作環境 】Windows 10 32/64bit
-【バージョン】1.0
-【最終更新日】2021/1/31
+【 開発環境 】Microsoft Visual Studio 2022
+【 動作環境 】Windows 11 64bit
+【バージョン】1.1
+【最終更新日】2023/6/4
 
 ---------- ----------
 ◇ 概要 ◇
@@ -46,5 +46,7 @@ calibreの設定変更
 ◇ FAQ・既知のバグ ◇
 
 ◇ 履歴 ◇
+1.1
+	表紙ファイルが標準でimageフォルダに含まれるタイプのファイルに対応
 1.0
 	初版作成
